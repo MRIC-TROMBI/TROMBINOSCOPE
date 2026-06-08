@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trombinoscope - Club Aéromodélisme</title>
+    <!-- Intégration de FontAwesome pour des petites icônes sympas -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a8a; /* Bleu aviation */
+            --secondary: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 15px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 10px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Grille du trombinoscope */
+        .trombi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Carte Membre */
+        .member-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding-bottom: 10px;
+        }
+
+        .member-card:active {
+            transform: scale(0.95);
+        }
+
+        .member-img-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background-color: #e2e8f0;
+        }
+
+        .member-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .member-card h3 {
+            font-size: 0.95rem;
+            margin-top: 8px;
+            padding: 0 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-card p {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        /* Fenêtre Pop-up (Modal) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 350px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .modal-hero {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #e2e8f0;
+        }
+
+        .modal-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body h2 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 2px;
+        }
+
+        .modal-role {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .info-row i {
+            width: 25px;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .info-row span {
+            color: #334155;
+        }
+        
+        .info-row a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="fa-solid fa-plane"></i> AeroClub Trombi</h1>
+        <p>Membres de l'association</p>
+    </header>
+
+    <!-- La grille où s'affichent les membres -->
+    <div class="trombi-grid" id="trombiGrid"></div>
+
+    <!-- La fenêtre pop-up cachée par défaut -->
+    <div class="modal" id="memberModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="toggleModal()">&times;</button>
+            <div class="modal-hero">
+                <img id="modalImg" src="" alt="Photo membre">
+            </div>
+            <div class="modal-body">
+                <h2 id="modalName">Prénom Nom</h2>
+                <p class="modal-role" id="modalRole">Rôle</p>
+                
+                <div class="info-row">
+                    <i class="fa-solid fa-phone"></i>
+                    <span id="modalPhone">Téléphone</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span id="modalEmail">Email</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa-solid fa-jet-fighter"></i>
+                    <span id="modalModel">Modèle favori</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span id="modalLicence">Licence FFAM</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DONNÉES DU CLUB ---
+        // Vous avez juste à modifier ou ajouter des lignes ici pour mettre à jour le club !
+        // Pour les photos, placez-les dans le même dossier (ex: "photos/jean.jpg") ou mettez un lien internet.
+        const membres = [
+            {
+                nom: "Claude MAIOTTI",
+                role: "Président",
+                photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400", // Exemple de photo internet
+                telephone: "06 01 02 03 04",
+                email: "president@aeroclub.com",
+                modele: "Extra 330 LX (Voltige)",
+                licence: "123456-A"
+            },
+            {
+                nom: "Eric PINÇON",
+                role: "Secrétaire / Instructeur",
+                photo: "Photos/Eric_Pincon.jpg",
+                telephone: "0781503124",
+                email: "pincon.e@free.fr",
+                modele: "Albatros D.V (Maquette bois)",
+                licence: "789101-B"
+            },
+            {
+                nom: "Thomas Durand",
+                role: "Membre actif",
+                photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
+                telephone: "07 88 99 00 11",
+                email: "thomas.d@mail.com",
+                modele: "Drone FPV Racing - Quad 5\"",
+                licence: "456789-C"
+            }
+        ];
+
+        // Génération automatique de la grille des membres
+        const grid = document.getElementById('trombiGrid');
+        
+        membres.forEach((membre, index) => {
+            const card = document.createElement('div');
+            card.className = 'member-card';
+            card.onclick = () => openModal(index);
+            
+            card.innerHTML = `
+                <div class="member-img-container">
+                    <img src="${membre.photo}" alt="${membre.nom}">
+                </div>
+                <h3>${membre.nom}</h3>
+                <p>${membre.role}</p>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Fonctions pour ouvrir/fermer la fiche détaillée
+        const modal = document.getElementById('memberModal');
+
+        function openModal(index) {
+            const m = membres[index];
+            document.getElementById('modalImg').src = m.photo;
+            document.getElementById('modalName').innerText = m.nom;
+            document.getElementById('modalRole').innerText = m.role;
+            
+            // Liens cliquables directs sur mobile pour appeler ou écrire
+            document.getElementById('modalPhone').innerHTML = `<a href="tel:${m.telephone}">${m.telephone}</a>`;
+            document.getElementById('modalEmail').innerHTML = `<a href="mailto:${m.email}">${m.email}</a>`;
+            
+            document.getElementById('modalModel').innerText = m.modele;
+            document.getElementById('modalLicence').innerText = "Licence : " + m.licence;
+            
+            modal.style.display = "flex";
+        }
+
+        function toggleModal() {
+            modal.style.display = "none";
+        }
+
+        function closeModal(event) {
+            if(event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
